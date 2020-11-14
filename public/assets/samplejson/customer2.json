@@ -1,0 +1,12 @@
+{
+	"id": 2,
+	"name": "Rustam",
+	"email": "rustam@test.com",
+	"phone": "987654321",
+	"city": "Boston",
+	"state": "MA",
+	"country": "USA",
+	"organization": "Company 2",
+	"jobProfile": "Software Developer",
+	"additionalInfo": "Buys Products Rarely"
+}

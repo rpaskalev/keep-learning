@@ -1,0 +1,12 @@
+{
+	"id": 3,
+	"name": "KeepLearning",
+	"email": "keeplearning@test.com",
+	"phone": "123412345",
+	"city": "New York",
+	"state": "NY",
+	"country": "USA",
+	"organization": "Company 3",
+	"jobProfile": "Software Developer",
+	"additionalInfo": "Buys Lots of Products in general"
+}

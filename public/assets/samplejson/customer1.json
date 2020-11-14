@@ -1,0 +1,12 @@
+{
+	"id": 1,
+	"name": "Nirmit",
+	"email": "nirmit@test.com",
+	"phone": "123456789",
+	"city": "Boston",
+	"state": "MA",
+	"country": "USA",
+	"organization": "Company 1",
+	"jobProfile": "Software Developer",
+	"additionalInfo": "Has Bought a lot of products before and a high Value Customer"
+}

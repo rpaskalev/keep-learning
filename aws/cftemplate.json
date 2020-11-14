@@ -1,0 +1,509 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Description": "BitBucket Server",
+   "Parameters": {
+      "DesiredCapacity": {
+         "Type": "Number",
+         "Default": "1",
+         "Description": "Min Number of EC2 instances."
+      },
+      "MaxSize": {
+         "Type": "Number",
+         "Default": "1",
+         "Description": "Max number of EC2 instances."
+      },
+      "ECSAMI": {
+         "Description": "AMI ID",
+         "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+         "Default": "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+      },
+      "InstanceType": {
+         "Description": "EC2 instance type",
+         "Type": "String",
+         "Default": "t3.medium",
+      }
+   },
+   
+   "Mappings": {
+      "SubnetConfig": {
+         "VPC": {
+            "CIDR": "10.0.0.0/16"
+         },
+         "PrivateOne": {
+            "CIDR": "10.0.2.0/24"
+         },
+         "PrivateTwo": {
+            "CIDR": "10.0.3.0/24"
+         }
+      }
+   },
+   "Resources": {
+      "VPC": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "EnableDnsSupport": true,
+            "EnableDnsHostnames": true,
+            "CidrBlock": null
+         }
+      },
+      "PrivateSubnetOne": {
+         "Type": "AWS::EC2::Subnet",
+         "Properties": {
+            "AvailabilityZone": {
+               "Fn::Select": [
+                  0,
+                  {
+                     "Fn::GetAZs": {
+                        "Ref": "AWS::Region"
+                     }
+                  }
+               ]
+            },
+            "VpcId": null,
+            "CidrBlock": null
+         }
+      },
+      "PrivateSubnetTwo": {
+         "Type": "AWS::EC2::Subnet",
+         "Properties": {
+            "AvailabilityZone": {
+               "Fn::Select": [
+                  1,
+                  {
+                     "Fn::GetAZs": {
+                        "Ref": "AWS::Region"
+                     }
+                  }
+               ]
+            },
+            "VpcId": null,
+            "CidrBlock": null
+         }
+      },
+      "InternetGateway": {
+         "Type": "AWS::EC2::InternetGateway"
+      },
+      "GatewayAttachement": {
+         "Type": "AWS::EC2::VPCGatewayAttachment",
+         "Properties": {
+            "VpcId": null,
+            "InternetGatewayId": null
+         }
+      },
+      "PrivateRouteTableOne": {
+         "Type": "AWS::EC2::RouteTable",
+         "Properties": {
+            "VpcId": null
+         }
+      },
+      "PrivateRouteOne": {
+         "Type": "AWS::EC2::Route",
+         "Properties": {
+            "RouteTableId": null,
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "NatGatewayId": null
+         }
+      },
+      "PrivateRouteTableOneAssociation": {
+         "Type": "AWS::EC2::SubnetRouteTableAssociation",
+         "Properties": {
+            "RouteTableId": null,
+            "SubnetId": null
+         }
+      },
+      "PrivateRouteTableTwo": {
+         "Type": "AWS::EC2::RouteTable",
+         "Properties": {
+            "VpcId": null
+         }
+      },
+      "PrivateRouteTwo": {
+         "Type": "AWS::EC2::Route",
+         "Properties": {
+            "RouteTableId": null,
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "NatGatewayId": null
+         }
+      },
+      "PrivateRouteTableTwoAssociation": {
+         "Type": "AWS::EC2::SubnetRouteTableAssociation",
+         "Properties": {
+            "RouteTableId": null,
+            "SubnetId": null
+         }
+      },
+      "ECSCluster": {
+         "Type": "AWS::ECS::Cluster"
+      },
+      "EcsHostSecurityGroup": {
+         "Type": "AWS::EC2::SecurityGroup",
+         "Properties": {
+            "GroupDescription": "Access to the ECS hosts that run containers",
+            "VpcId": null
+         }
+      },
+      "EcsSecurityGroupIngressFromPublicALB": {
+         "Type": "AWS::EC2::SecurityGroupIngress",
+         "Properties": {
+            "Description": "Ingress from the public ALB",
+            "GroupId": null,
+            "IpProtocol": -1,
+            "SourceSecurityGroupId": null
+         }
+      },
+      "EcsSecurityGroupIngressFromPrivateALB": {
+         "Type": "AWS::EC2::SecurityGroupIngress",
+         "Properties": {
+            "Description": "Ingress from the private ALB",
+            "GroupId": null,
+            "IpProtocol": -1,
+            "SourceSecurityGroupId": null
+         }
+      },
+      "EcsSecurityGroupIngressFromSelf": {
+         "Type": "AWS::EC2::SecurityGroupIngress",
+         "Properties": {
+            "Description": "Ingress from other containers in the same security group",
+            "GroupId": null,
+            "IpProtocol": -1,
+            "SourceSecurityGroupId": null
+         }
+      },
+      "ECSAutoScalingGroup": {
+         "Type": "AWS::AutoScaling::AutoScalingGroup",
+         "Properties": {
+            "VPCZoneIdentifier": [
+               null,
+               null
+            ],
+            "LaunchConfigurationName": null,
+            "MinSize": "1",
+            "MaxSize": null,
+            "DesiredCapacity": null
+         },
+         "CreationPolicy": {
+            "ResourceSignal": {
+               "Timeout": "PT15M"
+            }
+         },
+         "UpdatePolicy": {
+            "AutoScalingReplacingUpdate": {
+               "WillReplace": "true"
+            }
+         }
+      },
+      "ContainerInstances": {
+         "Type": "AWS::AutoScaling::LaunchConfiguration",
+         "Properties": {
+            "ImageId": null,
+            "SecurityGroups": [
+               null
+            ],
+            "InstanceType": null,
+            "IamInstanceProfile": null,
+            "UserData": {
+               "Fn::Base64": null
+            }
+         }
+      },
+      "AutoscalingRole": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Statement": [
+                  {
+                     "Effect": "Allow",
+                     "Principal": {
+                        "Service": [
+                           "application-autoscaling.amazonaws.com"
+                        ]
+                     },
+                     "Action": [
+                        "sts:AssumeRole"
+                     ]
+                  }
+               ]
+            },
+            "Path": "/",
+            "Policies": [
+               {
+                  "PolicyName": "service-autoscaling",
+                  "PolicyDocument": {
+                     "Statement": [
+                        {
+                           "Effect": "Allow",
+                           "Action": [
+                              "application-autoscaling:*",
+                              "cloudwatch:DescribeAlarms",
+                              "cloudwatch:PutMetricAlarm",
+                              "ecs:DescribeServices",
+                              "ecs:UpdateService"
+                           ],
+                           "Resource": "*"
+                        }
+                     ]
+                  }
+               }
+            ]
+         }
+      },
+      "EC2InstanceProfile": {
+         "Type": "AWS::IAM::InstanceProfile",
+         "Properties": {
+            "Path": "/",
+            "Roles": [
+               null
+            ]
+         }
+      },
+      "EC2Role": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Statement": [
+                  {
+                     "Effect": "Allow",
+                     "Principal": {
+                        "Service": [
+                           "ec2.amazonaws.com"
+                        ]
+                     },
+                     "Action": [
+                        "sts:AssumeRole"
+                     ]
+                  }
+               ]
+            },
+            "Path": "/",
+            "Policies": [
+               {
+                  "PolicyName": "ecs-service",
+                  "PolicyDocument": {
+                     "Statement": [
+                        {
+                           "Effect": "Allow",
+                           "Action": [
+                              "ecs:CreateCluster",
+                              "ecs:DeregisterContainerInstance",
+                              "ecs:DiscoverPollEndpoint",
+                              "ecs:Poll",
+                              "ecs:RegisterContainerInstance",
+                              "ecs:StartTelemetrySession",
+                              "ecs:Submit*",
+                              "logs:CreateLogStream",
+                              "logs:PutLogEvents",
+                              "ecr:GetAuthorizationToken",
+                              "ecr:BatchGetImage",
+                              "ecr:GetDownloadUrlForLayer"
+                           ],
+                           "Resource": "*"
+                        }
+                     ]
+                  }
+               }
+            ]
+         }
+      },
+      "PrivateLoadBalancerSG": {
+         "Type": "AWS::EC2::SecurityGroup",
+         "Properties": {
+            "GroupDescription": "Access to the internal load balancer",
+            "VpcId": null
+         }
+      },
+      "PrivateLoadBalancerIngressFromECS": {
+         "Type": "AWS::EC2::SecurityGroupIngress",
+         "Properties": {
+            "Description": "Only accept traffic from a container in the container host security group",
+            "GroupId": null,
+            "IpProtocol": -1,
+            "SourceSecurityGroupId": null
+         }
+      },
+      "PrivateLoadBalancer": {
+         "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+         "Properties": {
+            "Scheme": "internal",
+            "LoadBalancerAttributes": [
+               {
+                  "Key": "idle_timeout.timeout_seconds",
+                  "Value": "30"
+               }
+            ],
+            "Subnets": [
+               null,
+               null
+            ],
+            "SecurityGroups": [
+               null
+            ]
+         }
+      },
+      "DummyTargetGroupPrivate": {
+         "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+         "Properties": {
+            "HealthCheckIntervalSeconds": 6,
+            "HealthCheckPath": "/",
+            "HealthCheckProtocol": "HTTP",
+            "HealthCheckTimeoutSeconds": 5,
+            "HealthyThresholdCount": 2,
+            "Name": null,
+            "Port": 80,
+            "Protocol": "HTTP",
+            "UnhealthyThresholdCount": 2,
+            "VpcId": null
+         }
+      },
+      "PrivateLoadBalancerListener": {
+         "Type": "AWS::ElasticLoadBalancingV2::Listener",
+         "DependsOn": [
+            "PrivateLoadBalancer"
+         ],
+         "Properties": {
+            "DefaultActions": [
+               {
+                  "TargetGroupArn": null,
+                  "Type": "forward"
+               }
+            ],
+            "LoadBalancerArn": null,
+            "Port": 80,
+            "Protocol": "HTTP"
+         }
+      },
+      "ECSRole": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Statement": [
+                  {
+                     "Effect": "Allow",
+                     "Principal": {
+                        "Service": [
+                           "ecs.amazonaws.com"
+                        ]
+                     },
+                     "Action": [
+                        "sts:AssumeRole"
+                     ]
+                  }
+               ]
+            },
+            "Path": "/",
+            "Policies": [
+               {
+                  "PolicyName": "ecs-service",
+                  "PolicyDocument": {
+                     "Statement": [
+                        {
+                           "Effect": "Allow",
+                           "Action": [
+                              "ec2:AttachNetworkInterface",
+                              "ec2:CreateNetworkInterface",
+                              "ec2:CreateNetworkInterfacePermission",
+                              "ec2:DeleteNetworkInterface",
+                              "ec2:DeleteNetworkInterfacePermission",
+                              "ec2:Describe*",
+                              "ec2:DetachNetworkInterface",
+                              "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                              "elasticloadbalancing:DeregisterTargets",
+                              "elasticloadbalancing:Describe*",
+                              "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                              "elasticloadbalancing:RegisterTargets"
+                           ],
+                           "Resource": "*"
+                        }
+                     ]
+                  }
+               }
+            ]
+         }
+      }
+   },
+   "Outputs": {
+      "ClusterName": {
+         "Description": "The name of the ECS cluster",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "InternalUrl": {
+         "Description": "The url of the internal load balancer",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "ExternalUrl": {
+         "Description": "The url of the external load balancer",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "ECSRole": {
+         "Description": "The ARN of the ECS role",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PublicListener": {
+         "Description": "The ARN of the public load balancer's Listener",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PrivateListener": {
+         "Description": "The ARN of the public load balancer's Listener",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "VPCId": {
+         "Description": "The ID of the VPC that this stack is deployed in",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PublicSubnetOne": {
+         "Description": "Public subnet one",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PublicSubnetTwo": {
+         "Description": "Public subnet two",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PrivateSubnetOne": {
+         "Description": "Private subnet one",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "PrivateSubnetTwo": {
+         "Description": "Private subnet two",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      },
+      "EcsHostSecurityGroup": {
+         "Description": "A security group used to allow containers to receive traffic",
+         "Value": null,
+         "Export": {
+            "Name": null
+         }
+      }
+   }
+}

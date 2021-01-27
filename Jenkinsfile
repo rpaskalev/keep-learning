@@ -16,7 +16,7 @@ pipeline {
   stages {
 
     stage("Prepare Build Environment") {
-      agent { label "nodejs" }
+      agent { label "master" }
       steps {
         scripts {
           sh 'npm install'
@@ -25,7 +25,7 @@ pipeline {
     }
     
     stage("Publish Build Environment") {
-      agent { label "nodejs" }
+      agent { label "master" }
       steps {
         scripts {
            echo "npm publish <Artifactory URL>"
@@ -34,7 +34,7 @@ pipeline {
     }
     
     stage("Bundle AWS Artifact") {
-      agent { label "nodejs" }
+      agent { label "master" }
       environment {
         appname='myapp1'
       }
@@ -48,7 +48,7 @@ pipeline {
     }
     
     stage("Publish AWS Artifact") {
-      agent { label "nodejs" }
+      agent { label "master" }
       steps {
         scripts {
            echo "curl -LO  myapp.tgz <ArtifactoryURL>"
@@ -57,7 +57,7 @@ pipeline {
     }
     
     stage("AWS Deploy") {
-      agent { label "nodejs" }
+      agent { label "master" }
       steps {
         scripts {
            echo "aws cloudformation create myapp.tgz"

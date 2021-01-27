@@ -10,9 +10,7 @@ pipeline {
   environment {
     buildtype='package'
   }
-  parameters {
-        choice(name: 'Branch', choices: 'master')
-  }
+
   stages {
 
     stage("Prepare Build Environment") {

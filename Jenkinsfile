@@ -11,7 +11,7 @@ pipeline {
     buildtype='package'
   }
   parameters {
-        choice(name: 'Branch', choices: master)
+        choice(name: 'Branch', choices: 'master')
   }
   stages {
 

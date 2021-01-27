@@ -1,6 +1,6 @@
 
 pipeline {
-  agent none
+  agent any
   options { 
     //only keep logs for 5 runs
     buildDiscarder(logRotator(numToKeepStr: '2')) 

@@ -7,9 +7,6 @@ pipeline {
     //declarative does a checkout automatically, set this to disable
     
   }
-  environment {
-    buildtype='package'
-  }
 
   stages {
 

@@ -1,5 +1,7 @@
 FROM amazonlinux
 
+USER root
+
 WORKDIR /tmp
 
 RUN yum install git tar xz -y \

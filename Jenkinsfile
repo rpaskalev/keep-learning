@@ -7,18 +7,14 @@ pipeline {
     stage("Prepare Build Environment") {
       
       steps {
-        scripts {
           sh 'docker build -t rady-kl .'
-        }
       }
     }
     
     stage("run container") {
      
       steps {
-        scripts {
            sh 'docker run -it -d --net=host rady-kl'
-        }
       }
     }
     

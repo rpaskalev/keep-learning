@@ -10,11 +10,7 @@ RUN yum install git tar xz -y \
 
 ENV PATH="/usr/local/lib/nodejs/node-v14.15.0-linux-x64/bin:${PATH}"
 
-COPY src ./src
-COPY README.md .
-COPY public ./public
-COPY package.json .
-COPY LICENSE .
+COPY file/* ./
 
 RUN npm install
 

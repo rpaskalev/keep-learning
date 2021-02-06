@@ -1,13 +1,7 @@
 
 pipeline {
   agent any
-  options { 
-    //only keep logs for 5 runs
-    buildDiscarder(logRotator(numToKeepStr: '2')) 
-    //declarative does a checkout automatically, set this to disable
-    
-  }
-
+  
   stages {
 
     stage("Prepare Build Environment") {
@@ -23,7 +17,7 @@ pipeline {
      
       steps {
         scripts {
-           sh "docker run -it -d --net=host rady-kl"
+           sh 'docker run -it -d --net=host rady-kl'
         }
       }
     }
